@@ -228,13 +228,16 @@ class SLlidarNode : public rclcpp::Node
         scan_msg->range_min = 0.05;
         scan_msg->range_max = max_distance;//8.0;
 
+        auto i_limit_min = node_count * 1 / 4;
+        auto i_limit_max = node_count * 3 / 4;
+
         scan_msg->intensities.resize(node_count);
         scan_msg->ranges.resize(node_count);
         bool reverse_data = (!inverted && reversed) || (inverted && !reversed);
         if (!reverse_data) {
             for (size_t i = 0; i < node_count; i++) {
                 float read_value = (float) nodes[i].dist_mm_q2/4.0f/1000;
-                if (read_value == 0.0)
+                if (read_value == 0.0 || (i >= i_limit_min && i <= i_limit_max))
                     scan_msg->ranges[i] = std::numeric_limits<float>::infinity();
                 else
                     scan_msg->ranges[i] = read_value;
@@ -243,7 +246,7 @@ class SLlidarNode : public rclcpp::Node
         } else {
             for (size_t i = 0; i < node_count; i++) {
                 float read_value = (float)nodes[i].dist_mm_q2/4.0f/1000;
-                if (read_value == 0.0)
+                if (read_value == 0.0 || (i >= i_limit_min && i <= i_limit_max))
                     scan_msg->ranges[node_count-1-i] = std::numeric_limits<float>::infinity();
                 else
                     scan_msg->ranges[node_count-1-i] = read_value;
